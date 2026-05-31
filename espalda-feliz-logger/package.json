@@ -1,0 +1,16 @@
+{
+  "name": "espalda-feliz-logger",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "googleapis": "^144.0.0"
+  }
+}
