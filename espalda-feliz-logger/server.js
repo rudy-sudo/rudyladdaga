@@ -7,6 +7,8 @@ const APP_VERSION = process.env.APP_VERSION || "cloud-run";
 const allowedOrigins = new Set([
   "https://laddaga.net",
   "https://www.laddaga.net",
+  "http://laddaga.net",
+  "http://www.laddaga.net",
   "https://rudy-sudo.github.io",
   "http://localhost:8080",
   "http://127.0.0.1:8080"
