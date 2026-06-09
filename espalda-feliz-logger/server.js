@@ -28,6 +28,10 @@ app.use((req, res, next) => {
   next();
 });
 
+function safeJson(value) {
+  try { return JSON.parse(value || "{}"); } catch { return {}; }
+}
+
 function cleanText(value, max = 5000) {
   return String(value || "").slice(0, max);
 }
@@ -61,6 +65,45 @@ function buildRow(data) {
 
 app.get("/", (req, res) => {
   res.json({ ok: true, service: "espalda-feliz-logger" });
+});
+
+app.get("/latest", async (req, res) => {
+  if (!SHEET_ID) return res.status(500).json({ ok: false, error: "missing_sheet_id" });
+  const day = String(req.query.day || "A").toUpperCase().slice(0, 8);
+  const limit = Math.min(Number(req.query.limit) || 1, 10);
+
+  try {
+    const auth = await google.auth.getClient({
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"]
+    });
+    const sheets = google.sheets({ version: "v4", auth });
+
+    const result = await sheets.spreadsheets.values.get({
+      spreadsheetId: SHEET_ID,
+      range: "Sesiones!A:O"
+    });
+
+    const rows = (result.data.values || []).slice(1).filter(r => r[2] === day).slice(-limit).reverse();
+    const sessions = rows.map(r => ({
+      timestamp: r[0] || "",
+      fecha: r[1] || "",
+      dia: r[2] || "",
+      mood: r[3] || "",
+      done: Number(r[4]) || 0,
+      total: Number(r[5]) || 0,
+      notas: r[7] || "",
+      series: safeJson(r[8]),
+      weights: safeJson(r[9]),
+      quickNotes: safeJson(r[10]),
+      deviceId: r[13] || "",
+      source: r[14] || ""
+    }));
+
+    res.json({ ok: true, sessions });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ ok: false, error: "read_failed" });
+  }
 });
 
 app.post("/", async (req, res) => {
